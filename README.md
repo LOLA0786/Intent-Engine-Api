@@ -120,23 +120,13 @@ After purchasing credits, you will receive:
 - endpoint details
 - setup instructions
 
-This allows us to onboard early users quickly
-without unnecessary infrastructure overhead.
+ CHANDAN GALANI 
+
+ X @CHANDANGALANI
 
 
-
-
-
----
-
-## HOW TO INSTALL THIS README
-
-1. Copy the text above.
-2. Go to your repo:  
-   https://github.com/LOLA0786/Intent-Engine-Api
-3. Create or replace **README.md**
-4. Commit and push.
-
+ 
+ 
  
 
  

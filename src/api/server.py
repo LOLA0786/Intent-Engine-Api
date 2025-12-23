@@ -1,9 +1,26 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException, Depends
 from pydantic import BaseModel
 from datetime import datetime
 import uuid
+import json
 
 api = FastAPI()
+
+# -----------------------
+# Load API keys
+# -----------------------
+with open("api_keys.json") as f:
+    API_KEYS = json.load(f)
+
+def require_api_key(x_api_key: str = Header(...)):
+    if x_api_key not in API_KEYS:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
+    if API_KEYS[x_api_key]["used"] >= API_KEYS[x_api_key]["credits"]:
+        raise HTTPException(status_code=402, detail="Quota exceeded")
+
+    API_KEYS[x_api_key]["used"] += 1
+    return x_api_key
 
 # -----------------------
 # In-memory intent store
@@ -16,14 +33,9 @@ INTENTS = []
 class InjectIntentRequest(BaseModel):
     topic: str
     confidence: float | None = None
-    momentum: str | None = None
-    authenticity: dict | None = None
-    streak_days: int | None = None
-
 
 class VerifyIntentRequest(BaseModel):
     topic: str
-
 
 # -----------------------
 # Health
@@ -32,9 +44,8 @@ class VerifyIntentRequest(BaseModel):
 def health():
     return {"status": "ok"}
 
-
 # -----------------------
-# Inject Intent
+# Inject Intent (FREE)
 # -----------------------
 @api.post("/inject-intent")
 def inject_intent(req: InjectIntentRequest):
@@ -47,12 +58,14 @@ def inject_intent(req: InjectIntentRequest):
     INTENTS.append(intent)
     return {"id": intent["id"]}
 
-
 # -----------------------
-# VERIFY INTENT (PRODUCT)
+# Verify Intent (PAID)
 # -----------------------
 @api.post("/verify-intent")
-def verify_intent(req: VerifyIntentRequest):
+def verify_intent(
+    req: VerifyIntentRequest,
+    api_key: str = Depends(require_api_key)
+):
     if not INTENTS:
         return {
             "allowed": False,

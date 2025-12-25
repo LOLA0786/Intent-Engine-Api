@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+service AgentAuth {
+  rpc Authorize (AuthRequest) returns (AuthResponse);
+}
+
+message AuthRequest {
+  string action = 1;
+  string principal = 2;
+}
+
+message AuthResponse {
+  string capability_token = 1;
+}

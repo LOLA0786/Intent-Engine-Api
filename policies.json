@@ -1,0 +1,59 @@
+{
+  "v1": {
+    "policy": {
+      "approve_loan": {
+        "allowed_roles": [
+          "human"
+        ],
+        "max_amount": 500000,
+        "require_human": true
+      }
+    },
+    "created_at": "2025-12-25T16:26:29.153065",
+    "active": false
+  },
+  "v2": {
+    "policy": {
+      "approve_loan": {
+        "allowed_roles": [
+          "human",
+          "agent"
+        ],
+        "max_amount": 1000000,
+        "require_human": false
+      }
+    },
+    "created_at": "2025-12-25T16:26:29.153811",
+    "active": false
+  },
+  "v4": {
+    "policy": {
+      "approve_loan": {
+        "allowed_roles": [
+          "agent"
+        ],
+        "max_amount": 500000,
+        "min_trust_level": "high",
+        "rate_limit_per_min": 2,
+        "daily_spend_cap": 700000
+      }
+    },
+    "created_at": "2025-12-25T16:32:32.373569",
+    "active": false
+  },
+  "prod-v1": {
+    "policy": {
+      "approve_loan": {
+        "allowed_roles": [
+          "agent"
+        ],
+        "max_amount": 500000,
+        "min_trust_level": "high",
+        "rate_limit_per_min": 5,
+        "daily_spend_cap": 1000000
+      }
+    },
+    "created_at": "2025-12-25T16:34:44.788059",
+    "active": true
+  }
+}

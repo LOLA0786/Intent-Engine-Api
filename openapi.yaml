@@ -1,0 +1,81 @@
+openapi: 3.0.3
+info:
+  title: Intent Engine API
+  version: 1.1.0
+  description: >
+    Deterministic authorization engine with constrained LLM-based intent normalization
+    and cryptographic decision evidence.
+
+paths:
+  /normalize-intent:
+    post:
+      summary: Normalize unstructured input into validated intent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                raw_text:
+                  type: string
+      responses:
+        '200':
+          description: Normalized intent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NormalizedIntent'
+
+  /authorize-intent:
+    post:
+      summary: Deterministically authorize a normalized intent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NormalizedIntent'
+      responses:
+        '200':
+          description: Authorization decision with evidence
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecisionEvidence'
+
+components:
+  schemas:
+    NormalizedIntent:
+      type: object
+      required: [action, amount, country]
+      properties:
+        action:
+          type: string
+          enum: [process_payment, approve_loan, engage_legal_counsel]
+        amount:
+          type: number
+          minimum: 0
+        country:
+          type: string
+        risk:
+          type: string
+          enum: [low, medium, high]
+        sensitive:
+          type: boolean
+
+    DecisionEvidence:
+      type: object
+      required: [decision, reason, policy_version, evidence_hash, timestamp]
+      properties:
+        decision:
+          type: boolean
+        reason:
+          type: string
+        policy_version:
+          type: string
+        evidence_hash:
+          type: string
+        timestamp:
+          type: string
+          format: date-time

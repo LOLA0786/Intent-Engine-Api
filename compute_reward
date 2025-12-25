@@ -1,0 +1,7 @@
+# Penalize concentration
+if outcome["provider"] == "local":
+    reward -= 0.15  # discourage overuse
+
+# Encourage diversity
+reward -= abs(provider_mix["local"] - 0.5) * 0.2
+

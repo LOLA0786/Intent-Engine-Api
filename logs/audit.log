@@ -1,0 +1,1 @@
+{"intent": {"action": "approve_loan", "loan_amount": 2000000, "risk": "medium", "sensitive": false}, "checks": [["AMOUNT_LIMIT", false, "Loan amount exceeds \u20b910L policy limit"]], "allowed": false, "timestamp": 1766578726.853446, "hash": "a5fa74ca06a4c8996103a313017ef2e401c94c1f7c28d945b9a49f01ec331b92"}

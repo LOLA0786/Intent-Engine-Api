@@ -1,44 +1,40 @@
-import requests
-
-UAAL_URL = "http://127.0.0.1:8001"
+USE_MOCK_UAAL = True  # DEMO SAFE MODE
 
 def authorize_intent(intent_payload):
-    """
-    intent_payload = {
-        "topic": str,
-        "confidence": float,
-        "sensitive": bool
-    }
-    """
-    try:
-        r = requests.post(
-            f"{UAAL_URL}/authorize/intent",
-            json=intent_payload,
-            timeout=2
-        )
-        return r.json()
-    except Exception as e:
+    amount = intent_payload.get("loan_amount", 0)
+    risk = intent_payload.get("risk")
+
+    # Policy 1: amount-based limit
+    if amount > 1_000_000:
         return {
             "allowed": False,
-            "reason": f"UAAL intent auth failed: {e}"
+            "reason": "Loan amount exceeds AI approval threshold"
         }
+
+    # Policy 2: risk-based deny
+    if risk == "high":
+        return {
+            "allowed": False,
+            "reason": "High-risk customer requires manual approval"
+        }
+
+    return {
+        "allowed": True,
+        "reason": "Intent allowed by policy"
+    }
 
 
 def authorize_execution(intent_decision, plan):
-    payload = {
-        "intent": intent_decision,
-        "plan": plan
-    }
-
-    try:
-        r = requests.post(
-            f"{UAAL_URL}/authorize/execution",
-            json=payload,
-            timeout=2
-        )
-        return r.json()
-    except Exception as e:
+    if USE_MOCK_UAAL:
+        # Execution-level checks
+        if plan["provider"] == "local" and intent_decision.get("sensitive"):
+            return {
+                "allowed": True,
+                "reason": "Local execution allowed for sensitive intent"
+            }
         return {
-            "allowed": False,
-            "reason": f"UAAL exec auth failed: {e}"
+            "allowed": True,
+            "reason": "Execution allowed"
         }
+
+    raise RuntimeError("Live UAAL not enabled")

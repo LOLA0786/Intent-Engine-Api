@@ -32,22 +32,6 @@ def authorize_intent(intent: dict) -> dict:
 # ==============================
 # CANONICAL DECISION FUNCTION
 # ==============================
-def decide_intent(intent: dict, plan: str) -> dict:
-    """
-    Deterministic allow/deny decision.
-    This is the ONLY function the API should call.
-    """
-    # --- minimal deterministic rules (start simple) ---
-    if intent.get("action") == "process_payment":
-        if intent.get("amount", 0) >= 10000:
-            return {"allowed": False, "reason": "AML_THRESHOLD"}
-        if intent.get("country") in ["Russia", "Belarus"]:
-            return {"allowed": False, "reason": "SANCTIONED_GEO"}
-
-    if intent.get("sensitive") and intent.get("risk") == "medium":
-        return {"allowed": False, "reason": "SENSITIVE_MEDIUM_RISK"}
-
-    return {"allowed": True, "reason": "POLICY_OK"}
 
 # ==============================
 # API-FACING ADAPTER
@@ -55,3 +39,60 @@ def decide_intent(intent: dict, plan: str) -> dict:
 def authorize_intent(intent: dict) -> dict:
     DEFAULT_PLAN = "fintech-v1.1"
     return decide_intent(intent, DEFAULT_PLAN)
+
+def shadow_decide_intent(intent: dict, plan: str) -> dict:
+    """
+    Evaluates policy without enforcing it.
+    """
+    decision = decide_intent(intent, plan)
+    return {
+        "shadow_allowed": decision["allowed"],
+        "shadow_reason": decision["reason"]
+    }
+def decide_intent(intent: dict, plan: str) -> dict:
+    """
+    Deterministic, fail-closed authorization decision.
+    """
+
+    # ---- required structure ----
+    if not isinstance(intent, dict):
+        return {"allowed": False, "reason": "INVALID_INTENT_TYPE"}
+
+    action = intent.get("action")
+    if action not in {"process_payment", "engage_legal_counsel", "read_prescription"}:
+        return {"allowed": False, "reason": "UNKNOWN_ACTION"}
+
+    # ---- normalize fields ----
+    amount = intent.get("amount")
+    country = intent.get("country")
+    risk = intent.get("risk")
+    sensitive = intent.get("sensitive", False)
+
+    # ---- payment rules ----
+    if action == "process_payment":
+        if amount is None or country is None:
+            return {"allowed": False, "reason": "MISSING_REQUIRED_FIELD"}
+
+        # type safety
+        if not isinstance(amount, (int, float)):
+            return {"allowed": False, "reason": "INVALID_AMOUNT_TYPE"}
+
+        # precision guard
+        if amount != round(amount, 2):
+            return {"allowed": False, "reason": "INVALID_AMOUNT_PRECISION"}
+
+        country = country.strip().lower()
+
+        if amount >= 10000:
+            return {"allowed": False, "reason": "AML_THRESHOLD"}
+
+        if country in {"russia", "belarus"}:
+            return {"allowed": False, "reason": "SANCTIONED_GEO"}
+
+    # ---- legal rules ----
+    if action == "engage_legal_counsel":
+        if sensitive and risk == "medium":
+            return {"allowed": False, "reason": "SENSITIVE_MEDIUM_RISK"}
+
+    # ---- default allow (explicit) ----
+    return {"allowed": True, "reason": "POLICY_OK"}

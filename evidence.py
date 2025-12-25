@@ -45,3 +45,10 @@ def generate_evidence(intent: dict, decision: dict, policy_version: str) -> dict
         "evidence_hash": evidence_hash,
         "timestamp": datetime.utcnow().isoformat()
     }
+
+# ==============================
+# EVIDENCE VERIFICATION
+# ==============================
+def verify_evidence(intent: dict, decision: dict, policy_version: str, evidence_hash: str) -> bool:
+    regenerated = generate_evidence(intent, decision, policy_version)
+    return regenerated["evidence_hash"] == evidence_hash

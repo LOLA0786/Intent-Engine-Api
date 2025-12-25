@@ -36,3 +36,22 @@ def authorize_intent_api(intent: NormalizedIntent):
         decision=decision,
         policy_version="fintech-v1.1"
     )
+
+from evidence import verify_evidence
+
+class VerifyPayload(BaseModel):
+    intent: dict
+    decision: dict
+    policy_version: str
+    evidence_hash: str
+
+
+@app.post("/verify-evidence")
+def verify_evidence_api(payload: VerifyPayload):
+    valid = verify_evidence(
+        payload.intent,
+        payload.decision,
+        payload.policy_version,
+        payload.evidence_hash
+    )
+    return {"valid": valid}

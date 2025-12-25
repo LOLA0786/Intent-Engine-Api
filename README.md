@@ -434,12 +434,6 @@ audit trails remain intact
 Even when normalization is lossy, execution constraints remain invariant.
 Philosophy (One Line)
 
-We do not trust AI with execution.
-We constrain it.
-
-CHANDAN GALANI 
-X @chandangalani
-
 
 =======
 ---
@@ -510,4 +504,245 @@ Think:
 >>>>>>> 8fa526d (Add OpenAPI spec, evidence hashing, and policy versioning)
 
 > If AI is allowed to act — it must pass through here.
+
+
+# Intent Engine API
+
+A deterministic execution control plane for AI-driven systems.
+
+This project enforces **hard authorization, policy governance, and cryptographic evidence**
+for actions proposed by AI agents or automated systems.
+
+---
+
+## Core Principle
+
+> **AI may interpret intent. Execution is always deterministic.**
+
+All actions are validated against versioned policies.
+If validation fails, execution fails closed.
+
+---
+
+## Architecture Overview
+
+Unstructured Input  
+→ Intent Normalization (schema-validated, fail-closed)  
+→ Deterministic Policy Engine  
+→ Decision (allow / deny / flag)  
+→ Cryptographic Evidence (hash + timestamp)
+
+LLMs, if used, are **never in the execution or decision path**.
+
+---
+
+## Key Guarantees
+
+- **Deterministic decisions**  
+  Same input + same policy version → same outcome.
+
+- **Fail-closed execution**  
+  If intent cannot be validated, nothing executes.
+
+- **Versioned policies**  
+  Policy changes are explicit, testable, and non-retroactive.
+
+- **Cryptographic decision evidence**  
+  Every decision emits a reproducible SHA-256 hash.
+
+- **Replay & verification**  
+  Decisions can be independently re-verified via API.
+
+---
+
+## What This Is (and Is Not)
+
+**This is:**
+- An execution authorization layer
+- A governance and audit primitive
+- A safety boundary in front of automation
+
+**This is not:**
+- An LLM reasoning engine
+- A prompt-based rules system
+- An autonomous decision maker
+
+---
+
+## API Endpoints
+
+### `POST /normalize-intent`
+Normalizes unstructured input into a validated intent schema.
+Fails closed on malformed or out-of-contract input.
+
+### `POST /authorize-intent`
+Deterministically evaluates a normalized intent against policy rules.
+
+Returns:
+- decision (true / false)
+- reason
+- policy_version
+- evidence_hash
+- timestamp
+
+### `POST /verify-evidence`
+Recomputes and verifies the cryptographic evidence hash
+for a given intent, decision, and policy version.
+
+---
+
+## Determinism Proof
+
+Identical requests produce identical evidence hashes:
+ # Intent Engine API
+
+A deterministic execution control plane for AI-driven systems.
+
+This project enforces **hard authorization, policy governance, and cryptographic evidence**
+for actions proposed by AI agents or automated systems.
+
+---
+
+## Core Principle
+
+> **AI may interpret intent. Execution is always deterministic.**
+
+All actions are validated against versioned policies.
+If validation fails, execution fails closed.
+
+---
+
+## Architecture Overview
+
+Unstructured Input  
+→ Intent Normalization (schema-validated, fail-closed)  
+→ Deterministic Policy Engine  
+→ Decision (allow / deny / flag)  
+→ Cryptographic Evidence (hash + timestamp)
+
+LLMs, if used, are **never in the execution or decision path**.
+
+---
+
+## Key Guarantees
+
+- **Deterministic decisions**  
+  Same input + same policy version → same outcome.
+
+- **Fail-closed execution**  
+  If intent cannot be validated, nothing executes.
+
+- **Versioned policies**  
+  Policy changes are explicit, testable, and non-retroactive.
+
+- **Cryptographic decision evidence**  
+  Every decision emits a reproducible SHA-256 hash.
+
+- **Replay & verification**  
+  Decisions can be independently re-verified via API.
+
+---
+
+## What This Is (and Is Not)
+
+**This is:**
+- An execution authorization layer
+- A governance and audit primitive
+- A safety boundary in front of automation
+
+**This is not:**
+- An LLM reasoning engine
+- A prompt-based rules system
+- An autonomous decision maker
+
+---
+
+## API Endpoints
+
+### `POST /normalize-intent`
+Normalizes unstructured input into a validated intent schema.
+Fails closed on malformed or out-of-contract input.
+
+### `POST /authorize-intent`
+Deterministically evaluates a normalized intent against policy rules.
+
+Returns:
+- decision (true / false)
+- reason
+- policy_version
+- evidence_hash
+- timestamp
+
+### `POST /verify-evidence`
+Recomputes and verifies the cryptographic evidence hash
+for a given intent, decision, and policy version.
+
+---
+
+## Determinism Proof
+
+Identical requests produce identical evidence hashes:
+
+```bash
+curl -X POST /authorize-intent ... | jq '.evidence_hash'
+
+
+Policy Versioning
+
+Policies are explicitly versioned (e.g. fintech-v1.0, fintech-v1.1).
+
+Old decisions remain verifiable
+
+New policies do not rewrite history
+
+Policy migrations are regression-tested
+
+Testing & CI
+
+Demo scenarios are enforced as regression tests
+
+All tests run on every PR via GitHub Actions
+
+Determinism and policy behavior are CI-enforced
+
+If a change alters decision behavior, CI fails.
+
+Compliance Alignment (High Level)
+
+Designed to support:
+
+SOC 2 (change management, auditability, access control)
+
+EU AI Act (risk management, record-keeping, human oversight)
+
+This project provides technical controls, not compliance certification.
+
+Known Boundaries
+
+Intent normalization is best-effort and may reject ambiguous input
+
+This system governs execution, not model correctness
+
+Policies must be reviewed before activation in production
+
+Failures are expected to be explicit, bounded, and observable.
+
+Design Philosophy (Brief)
+
+Execution is treated as a contract, not a reasoning problem.
+All guarantees are enforced in code and tests, not trust.
+
+Status
+
+Production-safe core.
+Designed for extension, policy evolution, and audit scrutiny.
+
+
+---
+
+We do not trust AI with execution.
+We constrain it.
+
+CHANDAN GALANI 
+X @chandangalani
 

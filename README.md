@@ -737,8 +737,17 @@ Status
 Production-safe core.
 Designed for extension, policy evolution, and audit scrutiny.
 
+ # Zero-Trust AI Action Control Plane
 
----
+This project implements a policy-as-code authorization layer for AI agents.
+All actions require an explicit policy decision that issues a signed,
+single-use capability token before execution.
+
+Think: AWS Cedar + Zanzibar + Zero Trust, but for AI agents.
+
+Request → Policy Decision → Signed Capability → Single API Execution → Audit
+
+
 
 We do not trust AI with execution.
 We constrain it.

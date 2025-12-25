@@ -5,9 +5,8 @@
 Modern AI systems can *decide* — but they cannot be allowed to *act freely* in regulated environments.
 
 This platform enforces **intent-aware authorization**:
-> Every AI action is evaluated *before execution* against legal, regulatory, ethical, and safety policies — with cryptographic evidence.
+ Every AI action is evaluated *before execution* against legal, regulatory, ethical, and safety policies — with cryptographic evidence.
 
-<<<<<<< HEAD
 Buy API credits:
 👉 https://rzp.io/rzp/K9nust4m
 
@@ -24,19 +23,19 @@ It does not decide what is “correct.”
 It decides what is allowed to execute.
 
 Given a normalized intent (even imperfect), the engine enforces non-bypassable policy constraints, returns an allow/deny decision, and generates a defensible audit trail.
-=======
+
 If an action violates policy → it is **blocked deterministically**, not logged after damage occurs.
 >>>>>>> 8fa526d (Add OpenAPI spec, evidence hashing, and policy versioning)
 
 This makes AI systems safe to deploy in regulated and high-risk domains such as fintech, healthcare, legal, insurance, energy, and government.
 
-<<<<<<< HEAD
+
 What Problem This Solves
 
 Modern AI systems can propose actions, but enterprises struggle with:
 
 Preventing unsafe or illegal execution
-=======
+
 ## Why This Exists
 Traditional controls fail for AI systems:
 - Logs & audits are **post-hoc**
@@ -50,18 +49,18 @@ AI Decision → Real-World Action
 
 yaml
 Copy code
->>>>>>> 8fa526d (Add OpenAPI spec, evidence hashing, and policy versioning)
+ 8fa526d (Add OpenAPI spec, evidence hashing, and policy versioning)
 
 Enforcing regulatory and organizational rules consistently
 
-<<<<<<< HEAD
+
 Producing evidence that survives audits, investigations, or court scrutiny
 
 Containing AI behavior when inputs are ambiguous or unstructured
 
 Most tools focus on monitoring after the fact.
 Intent Engine focuses on blocking violations before execution.
-=======
+
 ## Core Capabilities
 - Intent normalization (what is the AI trying to do?)
 - Policy graph evaluation (laws, rules, thresholds)
@@ -69,11 +68,11 @@ Intent Engine focuses on blocking violations before execution.
 - Cryptographic evidence hash per decision
 - Regulator-ready audit bundles
 - Pre-execution enforcement (not monitoring)
->>>>>>> 8fa526d (Add OpenAPI spec, evidence hashing, and policy versioning)
+ 8fa526d (Add OpenAPI spec, evidence hashing, and policy versioning)
 
 Core Design Principle
 
-<<<<<<< HEAD
+
 AI may propose actions.
 This system decides whether those actions are allowed to run.
 
@@ -171,7 +170,7 @@ The current API returns a minimal contract such as:
   "intent_score": 0.42,
   "reason": "Policy violation: loan amount exceeds limit"
 }
-=======
+
 ## Supported Verticals (Unified Control Plane)
 
 ### 1. LegalTech
@@ -239,14 +238,14 @@ The current API returns a minimal contract such as:
 - False discounts & pricing fraud
 - Influencer disclosure violations
 - Refund & return rights breaches
->>>>>>> 8fa526d (Add OpenAPI spec, evidence hashing, and policy versioning)
+ 8fa526d (Add OpenAPI spec, evidence hashing, and policy versioning)
 
 **Value**
 - FTC & State AG enforcement avoidance
 - Platform-safe growth at scale
 - Trust-preserving automation
 
-<<<<<<< HEAD
+
 Notes:
 
 allowed is authoritative
@@ -435,10 +434,9 @@ Even when normalization is lossy, execution constraints remain invariant.
 Philosophy (One Line)
 
 
-=======
----
 
-### 6. Energy & Utilities
+
+ 6. Energy & Utilities
 **Risks Prevented**
 - NERC CIP violations
 - Market manipulation (FERC/CFTC)
@@ -452,7 +450,7 @@ Philosophy (One Line)
 
 ---
 
-### 7. Government & National Security
+ 7. Government & National Security
 **Risks Prevented**
 - Classified data leaks (TS//SCI)
 - Election interference
@@ -474,7 +472,7 @@ Philosophy (One Line)
 - ❌ Not a reporting-only RegTech tool
 - ❌ Not model governance
 
-<<<<<<< HEAD
+
 
 =======
 This is **action authorization**.
@@ -501,9 +499,9 @@ Think:
 - Vertical-grade demos complete
 - Deterministic evidence chain implemented
 - Enterprise pilots ready
->>>>>>> 8fa526d (Add OpenAPI spec, evidence hashing, and policy versioning)
+ 8fa526d (Add OpenAPI spec, evidence hashing, and policy versioning)
 
-> If AI is allowed to act — it must pass through here.
+ If AI is allowed to act — it must pass through here.
 
 
 # Intent Engine API
@@ -517,7 +515,7 @@ for actions proposed by AI agents or automated systems.
 
 ## Core Principle
 
-> **AI may interpret intent. Execution is always deterministic.**
+ **AI may interpret intent. Execution is always deterministic.**
 
 All actions are validated against versioned policies.
 If validation fails, execution fails closed.
@@ -605,7 +603,7 @@ for actions proposed by AI agents or automated systems.
 
 ## Core Principle
 
-> **AI may interpret intent. Execution is always deterministic.**
+ **AI may interpret intent. Execution is always deterministic.**
 
 All actions are validated against versioned policies.
 If validation fails, execution fails closed.
@@ -683,7 +681,6 @@ for a given intent, decision, and policy version.
 
 Identical requests produce identical evidence hashes:
 
-```bash
 curl -X POST /authorize-intent ... | jq '.evidence_hash'
 
 

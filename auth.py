@@ -109,6 +109,6 @@ def authorize_enveloped_intent(envelope: dict) -> dict:
     Payload is ignored by policy.
     """
     parsed = IntentEnvelope(**envelope)
-    core_intent = parsed.core.dict()
+    core_intent = parsed.core.model_dump()
 
     return authorize_intent(core_intent)

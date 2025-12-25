@@ -96,3 +96,19 @@ def decide_intent(intent: dict, plan: str) -> dict:
 
     # ---- default allow (explicit) ----
     return {"allowed": True, "reason": "POLICY_OK"}
+
+# ==============================
+# CORE-ONLY AUTHORIZATION
+# ==============================
+from intent_schema import IntentEnvelope
+
+def authorize_enveloped_intent(envelope: dict) -> dict:
+    """
+    API-facing authorization entrypoint.
+    Only the CORE is used for decisions.
+    Payload is ignored by policy.
+    """
+    parsed = IntentEnvelope(**envelope)
+    core_intent = parsed.core.dict()
+
+    return authorize_intent(core_intent)

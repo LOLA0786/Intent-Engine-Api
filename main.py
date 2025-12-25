@@ -55,3 +55,16 @@ def verify_evidence_api(payload: VerifyPayload):
         payload.evidence_hash
     )
     return {"valid": valid}
+from intent_schema import IntentEnvelope
+from auth import authorize_enveloped_intent
+from evidence import generate_evidence
+
+@app.post("/authorize-intent")
+def authorize_intent_api(envelope: IntentEnvelope):
+    decision = authorize_enveloped_intent(envelope.dict())
+
+    return generate_evidence(
+        intent=envelope.core.dict(),
+        decision=decision,
+        policy_version="fintech-v1.1"
+    )

@@ -13,273 +13,333 @@ Buy API credits:
 After payment, email your Payment ID to:
 lolasolution27@gmail.com
  
+Intent Engine API
+Deterministic Policy Enforcement for AI & Automation Systems
+What This Is
 
-# Intent Engine API
+Intent Engine is a policy enforcement layer that sits between AI/automation systems and real-world execution.
 
-**Decide whether your AI agent should act right now — based on live human intent.**
+It does not decide what is “correct.”
+It decides what is allowed to execute.
 
-This API lets you gate AI actions using real-time human intent signals so your agents act only when humans *actually care*.
+Given a normalized intent (even imperfect), the engine enforces non-bypassable policy constraints, returns an allow/deny decision, and generates a defensible audit trail.
 
----
+This makes AI systems safe to deploy in regulated and high-risk domains such as fintech, healthcare, legal, insurance, energy, and government.
 
-## 🚀 Quick Start
+What Problem This Solves
 
-### Generate an API Key
-1. Buy API credits here:  
-   👉 https://rzp.io/rzp/K9nust4m  
-2. After payment, note the **Payment ID**.
-3. Email the Payment ID to:  
- lolasolution27@gmail.com
+Modern AI systems can propose actions, but enterprises struggle with:
 
-4. We’ll issue your API key within 24 hours.
+Preventing unsafe or illegal execution
 
----
+Enforcing regulatory and organizational rules consistently
 
-## 📦 Pricing
+Producing evidence that survives audits, investigations, or court scrutiny
 
-| Item | Price | Credits |
-|------|-------|---------|
-| Intent Engine API Credits | ₹5,000 | 50,000 intent checks |
+Containing AI behavior when inputs are ambiguous or unstructured
 
-**Usage-based pricing:** every API call consumes one intent verification credit.
+Most tools focus on monitoring after the fact.
+Intent Engine focuses on blocking violations before execution.
 
----
+Core Design Principle
 
-## 🎯 API Endpoint
+AI may propose actions.
+This system decides whether those actions are allowed to run.
 
-### `POST /verify-intent`
+The system is intentionally conservative:
 
-**Base URL:**  
+False positives → escalation or block
 
+False negatives → not acceptable
 
+Architecture Overview
+Unstructured Input / AI Proposal
+            ↓
+Intent Normalization (pluggable, lossy)
+            ↓
+Policy Firewall (deterministic, invariant)
+            ↓
+ALLOW / BLOCK / ESCALATE
+            ↓
+Evidence + Audit Log (tamper-evident)
 
-**Request**
-```bash
-curl -X POST https://api.intentengine.ai/verify-intent \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "topic": "AI governance",
-    "action": "auto_approve_loan"
-  }'
+1. Intent Normalization (Non-Authoritative)
 
+Converts unstructured input into a canonical intent object
+
+Can be implemented via:
+
+regex / rules
+
+LLMs with strict schema validation
+
+upstream systems
+
+Normalization is replaceable and best-effort
+
+It is not trusted to make decisions
+
+2. Policy Firewall (Authoritative)
+
+Deterministic, human-authored rules
+
+No probabilistic reasoning
+
+No autonomous learning
+
+Enforces:
+
+regulatory constraints
+
+organizational SOPs
+
+hard safety invariants
+
+Designed to fail closed
+
+3. Evidence & Audit Trail
+
+Every decision produces:
+
+explicit policy checks (pass/fail)
+
+machine-verifiable evidence hash
+
+timestamped audit log
+
+Built for:
+
+regulators
+
+legal discovery
+
+compliance reviews
+
+What This Is NOT
+
+To avoid confusion, this system is not:
+
+❌ an LLM-based decision engine
+
+❌ an intent “understanding” model
+
+❌ a classifier optimized for accuracy scores
+
+❌ a replacement for human judgment
+
+❌ a monitoring or reporting-only tool
+
+If you are looking for autonomous AI reasoning, this is the wrong system.
+
+Response Model (Current)
+
+The current API returns a minimal contract such as:
 
 {
-  "allowed": true,
-  "intent_score": 1.445,
-  "reason": "High live human demand"
+  "allowed": false,
+  "intent_score": 0.42,
+  "reason": "Policy violation: loan amount exceeds limit"
 }
-What This Means
-
-Instead of allowing an AI agent to act just because it can, you now check whether humans are signaling interest in that topic right now. If intent is high enough → allowed. If not → blocked.
-
-This is useful for:
-
-autonomous agents
-
-AI workflows
-
-automated decision systems
-
-regulated AI actions
 
 
-import requests
+Notes:
 
- 
-API_KEY = "YOUR_API_KEY"
+allowed is authoritative
 
-def verify_intent(topic, action=None):
-    resp = requests.post(
-        f"{BASE_URL}/verify-intent",
-        headers={"Authorization": f"Bearer {API_KEY}"},
-        json={"topic": topic, "action": action}
-    )
-    return resp.json()
+intent_score is advisory only (normalization confidence)
 
-result = verify_intent("AI governance", "auto_approve_loan")
-print(result)
-**We’ll issue your API key within 24 hours **
+The response schema will evolve to include:
 
-About
+escalation states
 
-Intent Engine is a live human-alignment API that powers safe and relevant AI behavior.
-Phase 1: API + usage-based pricing → Dev-first adoption.
-Phase 2: Control plane integrations with AI deployment platforms.
-Phase 3: Enterprise compliance acceleration.
+evidence bundles
 
+policy versions
 
+The simplicity is intentional for early integration.
 
+Why This Approach Works
 
+Imperfect intent parsing does not cause unsafe execution
 
+Policy enforcement is:
 
+deterministic
 
-## 🧠 Reinforcement Learning Optimization
+explainable
 
-Intent Engine API uses **Proximal Policy Optimization (PPO)** to 
-continuously improve routing decisions.
+defensible
 
-### Performance vs. Rule-Based Systems
+The system de-risks AI adoption instead of accelerating it blindly
 
-| Metric | Rule-Based | PPO-Optimized |
-|--------|-----------|---------------|
-| Latency | 772ms | 355ms (**54% faster**) |
-| Cost | $0.012 | $0.000 (**100% cheaper**) |
-| Learns | ❌ | ✅ |
+This mirrors how large platforms (e.g., cloud providers) deploy AI safely:
+guardrails first, intelligence second.
 
-### How It Works
+Example Domains
 
-1. **Agent observes** - Intent, context, constraints
-2. **Agent decides** - Which LLM, policy, cache strategy
-3. **Agent learns** - From latency, cost, satisfaction
+This repo contains demo suites illustrating enforcement in:
 
-After 30 executions, our PPO agent achieves:
-- Optimal model selection (95% accuracy)
-- Smart caching (85% hit rate)
-- Cost-aware routing (minimal spend)
+Fintech (loan approval, AML constraints)
 
-### Run the Benchmark
-```bash
-python3 run_ppo_executions.py
-python3 -c "from metrics_compare import compare; print(compare())"
-```
+Healthtech (prescription safety)
 
-See real performance improvements in action.
-## API Access
+Legal (M&A, antitrust, fiduciary duties)
 
-The Intent Engine API is currently available via
-**private endpoints** (localhost / private deployment).
+Insurance (underwriting, claims handling)
 
-After purchasing credits, you will receive:
-- an API key
-- endpoint details
-- setup instructions
+Government (procurement, national security)
 
+These demos are illustrative, not exhaustive.
 
+Status
 
+This is an early-stage enforcement primitive, not a finished product.
 
- 
-# Intent-Aware Authorization Platform
-### The Deterministic Compliance & Control Plane for Autonomous AI Systems
-## TL;DR
-Modern AI systems can *decide* — but they cannot be allowed to *act freely* in regulated environments. This platform enforces **intent-aware authorization**:
+The focus today is:
 
-Every AI action is evaluated *before execution* against legal, regulatory, ethical, and safety policies — with cryptographic evidence. If an action violates policy → it is **blocked deterministically**, not logged after damage occurs.
+correctness
 
-## Why This Exists
-Traditional controls fail for AI systems:
-* Logs & audits are **post-hoc**
-* Guardrails are **prompt-level**
-* RegTech tools assume **humans are in the loop** Autonomous agents break all three assumptions. This platform is the **missing enforcement layer** between:
-## Core Capabilities
-* Intent normalization (what is the AI trying to do?)
-* Policy graph evaluation (laws, rules, thresholds)
-* Deterministic ALLOW / BLOCK decision
-* Cryptographic evidence hash per decision
-* Regulator-ready audit bundles
-* Pre-execution enforcement (not monitoring)
-## Supported Verticals (Unified Control Plane)
-### 1. LegalTech
-**Risks Prevented**
-* Conflicts of interest
-* Privilege waiver
-* Unauthorized practice of law
-* Insider trading exposure
-* Discovery spoliation **Value**
-* Prevents malpractice
-* Court-defensible audit trail
-* Ethics-by-construction for legal AI
-### 2. Banking & FinTech
-**Risks Prevented**
-* AML / KYC failures
-* UDAAP violations
-* Fair lending / CRA breaches
-* TILA / disclosure failures **Value**
-* Stops enforcement actions *before* filing
-* Deterministic compliance for AI underwriting, marketing, onboarding
-* SAR-ready evidence generation
-### 3. InsurTech
-**Risks Prevented**
-* Unfair discrimination / redlining
-* Filed-rate doctrine violations
-* Bad-faith claims handling
-* Unauthorized surplus lines placement
-* Solvency & reserving failures **Value**
-* License & solvency protection
-* Market conduct exam readiness
-* Enables safe automation of underwriting & claims
-### 4. Ecommerce & Marketplaces
-**Risks Prevented**
-* PCI DSS violations
-* Sales tax nexus failures
-* Customs & duty fraud
-* Banned product listings
-* Platform policy bans **Value**
-* Protects thin-margin businesses from existential fines
-* Pre-flight checks for global commerce AI
-### 5. D2C (Direct-to-Consumer)
-**Risks Prevented**
-* Dark patterns & deceptive UX
-* Subscription law violations
-* False discounts & pricing fraud
-* Influencer disclosure violations
-* Refund & return rights breaches **Value**
-* FTC & State AG enforcement avoidance
-* Platform-safe growth at scale
-* Trust-preserving automation
-### 6. Energy & Utilities
-**Risks Prevented**
-* NERC CIP violations
-* Market manipulation (FERC/CFTC)
-* Environmental strict liability
-* Worker safety incidents
-* ESG misreporting **Value**
-* Prevents blackouts, spills, fatalities, criminal exposure
-* AI-safe grid, trading, and operations
-### 7. Government & National Security
-**Risks Prevented**
-* Classified data leaks (TS//SCI)
-* Election interference
-* Unauthorized cyber operations
-* Constitutional violations
-* Treaty breaches **Value**
-* Sovereign-grade AI control
-* Pre-execution enforcement of law-of-war & civil liberties
-* Classified audit trails
-## What This Is NOT
-* ❌ Not a prompt wrapper
-* ❌ Not a monitoring dashboard
-* ❌ Not a reporting-only RegTech tool
-* ❌ Not model governance This is **action authorization**.
-## Mental Model
-Think:
-* IAM, but for **decisions**
-* Firewall, but for **intent**
-* SCADA safety interlock, but for **AI**
-## Deployment
-* Inline middleware (API / agent runtime)
-* Zero trust compatible
-* Works with any model (LLM, ML, rules, hybrid)
-* Human-in-the-loop optional, not required
-## Status
-* Vertical-grade demos complete
-* Deterministic evidence chain implemented
-* Enterprise pilots ready
+containment
 
-If AI is allowed to act — it must pass through here. 
+auditability
 
- CHANDAN GALANI 
+Optimization and expansion come later.
 
- X @CHANDANGALANI
+Philosophy (One Line)
 
+We do not trust AI with execution.
 
- 
- 
- 
+Domains Tested (Structured & Unstructured Inputs)
 
- 
+The engine has been exercised across multiple high-risk domains using both structured intents and unstructured natural-language inputs, with deterministic enforcement at the execution boundary.
 
- 
+Fintech / Banking
+
+Loan approval constraints (amount thresholds, risk tiers, sensitive actions)
+
+AML-style gating and escalation scenarios
+
+Economic and regulatory hard stops
+
+Demonstrated behavior:
+
+clean cases allowed
+
+edge cases blocked or escalated
+
+audit evidence generated per decision
+
+Healthtech
+
+Prescription safety enforcement
+
+Age restrictions
+
+Allergy conflicts
+
+Controlled substance frequency limits
+
+Pregnancy contraindications
+
+Demonstrated with:
+
+structured inputs
+
+unstructured prompts (e.g. free-text clinical instructions)
+
+Safety invariants enforced even under imperfect normalization
+
+Legal & M&A
+
+Merger clause validation
+
+Antitrust (HHI thresholds, market concentration)
+
+Fiduciary duty violations
+
+Regulatory filing requirements (HSR, SEC)
+
+Deterministic blocks with legal rationale and evidence hashes
+
+Insurance (InsurTech)
+
+Underwriting discrimination prevention
+
+Filed-rate doctrine enforcement
+
+Claims handling (bad faith prevention)
+
+Surplus lines eligibility checks
+
+Solvency and placement constraints
+
+E-commerce / D2C
+
+PCI-DSS enforcement
+
+GDPR / CCPA consent violations
+
+Sales tax nexus enforcement
+
+Customs and duty fraud prevention
+
+Deceptive marketing and consumer protection rules
+
+Energy & Infrastructure
+
+Safety and operational compliance constraints
+
+Restricted action enforcement
+
+Regulatory guardrails for high-risk operations
+
+Government / Public Sector
+
+Federal procurement constraints
+
+Export control (ITAR / EAR)
+
+National security and classified data handling
+
+Public benefits eligibility and civil-rights protections
+
+Election infrastructure and integrity safeguards
+
+Unstructured Intent Handling
+
+Across these domains, the system has been tested with:
+
+free-text instructions
+
+ambiguous or incomplete inputs
+
+mixed contextual signals (age, risk, symptoms, jurisdiction)
+
+In all cases:
+
+normalization is treated as non-authoritative
+
+policy enforcement remains deterministic
+
+unsafe execution is blocked or escalated
+
+audit trails remain intact
+
+ These tests demonstrate that policy enforcement correctness does not depend on perfect intent understanding.
+Even when normalization is lossy, execution constraints remain invariant.
+Philosophy (One Line)
+
+We do not trust AI with execution.
+We constrain it.
+
+CHANDAN GALANI 
+X @chandangalani
 
 
+
+
+
+
+
+We constrain it.
 

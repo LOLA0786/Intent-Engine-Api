@@ -1,0 +1,18 @@
+{
+  "name": "uaal-shadow",
+  "version": "1.0.0",
+  "description": "LLM Intent Firewall - Shadow Mode for Banking",
+  "bin": {
+    "uaal-shadow": "./bin/cli.js"
+  },
+  "scripts": {
+    "start": "node bin/cli.js",
+    "demo": "node bin/cli.js demo"
+  },
+  "keywords": ["llm", "firewall", "intent", "banking", "security"],
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.1.0",
+    "chalk": "^4.1.2"
+  }
+}

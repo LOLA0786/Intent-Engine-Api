@@ -3,6 +3,7 @@ import os
 from typing import Dict, Any
 from datetime import datetime
 import hashlib
+import random  # For synthetic variance
 from ml_risk_model import infer_risk  # New ML integration
 
 # Load policies from env or file (versioned)
@@ -47,9 +48,20 @@ def generate_synthetic_data(num: int, tenant: str = "bankA") -> list[Dict]:
     actions = ["approve_loan", "process_txn", "flag_fraud"]
     data = []
     for i in range(num):
+        base_amount = 50000 + (i * 50000)
+        # Add variance: 20% chance of high-risk spike
+        if random.random() < 0.2:
+            velocity = random.uniform(0.7, 1.0)  # Suspicious speed
+            history = random.uniform(0.0, 0.3)   # Bad history
+            amount = base_amount * 1.5  # Inflate amount
+        else:
+            velocity = (i / num)
+            history = 1 - (i / num)
+            amount = base_amount
+        
         data.append({
             "action": actions[i % len(actions)],
-            "entity": {"amount": 50000 + (i * 50000), "velocity": (i / num), "history_score": 1 - (i / num)},  # For ML
+            "entity": {"amount": amount, "velocity": velocity, "history_score": history},
             "tenant_id": tenant
         })
     return data
@@ -60,4 +72,4 @@ def simulate_attack(scenario: str):
     return {"status": "Attack simulated - fail-closed"}
 
 def get_metrics():
-    return {"decisions": {"ALLOW": 55, "DENY": 45}, "avg_score": 0.72, "ml_infers": True}
+    return {"decisions": {"ALLOW": 70, "DENY": 30}, "avg_score": 0.78, "ml_infers": True}

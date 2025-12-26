@@ -1,34 +1,36 @@
-import redis, time, json
+import redis
+import hashlib
+import os
 from datetime import datetime
+from typing import Optional
 
-r = redis.Redis(host="localhost", port=6379, decode_responses=True)
+class ReplayProtector:
+    def __init__(self):
+        self.redis_client = redis.Redis.from_url(
+            os.getenv("REDIS_URL", "redis://localhost:6379"),
+            password=os.getenv("REDIS_PASSWORD"),
+            decode_responses=True,
+            socket_connect_timeout=2,
+            retry_on_timeout=True
+        )
+        self.ttl = 1800  # 30 min
 
-MAX_REPLAY_PER_HOUR = 10
+    def generate_nonce(self, user_id: str, tenant_id: str, timestamp: str) -> str:
+        """Generate unique nonce."""
+        payload = f"{timestamp}{user_id}{tenant_id}"
+        return hashlib.sha256(payload.encode()).hexdigest()[:32]
 
-def record_replay_attempt(principal_id: str):
-    hour = datetime.utcnow().strftime("%Y%m%d%H")
-    key = f"replay_attempts:{principal_id}:{hour}"
+    async def check_and_cache_nonce(self, nonce: str, user_id: str, tenant_id: str) -> bool:
+        """Check if nonce used; cache if new. Returns True if fresh."""
+        key = f"nonce:{tenant_id}:{user_id}:{nonce}"
+        try:
+            if self.redis_client.exists(key):
+                return False  # Replay
+            self.redis_client.setex(key, self.ttl, "used")
+            return True
+        except Exception:
+            # Fail-closed: Assume replay on error
+            return False
 
-    attempts = r.incr(key)
-    r.expire(key, 3600)
-
-    if attempts > MAX_REPLAY_PER_HOUR:
-        alert = {
-            "principal": principal_id,
-            "attempts": attempts,
-            "time": datetime.utcnow().isoformat()
-        }
-        r.lpush("security_alerts", json.dumps(alert))
-        return False
-
-    return True
-
-def blacklist_token(jti: str, reason: str):
-    payload = {
-        "reason": reason,
-        "time": datetime.utcnow().isoformat()
-    }
-    r.setex(f"blacklisted:{jti}", 86400, json.dumps(payload))
-
-def is_blacklisted(jti: str) -> bool:
-    return r.exists(f"blacklisted:{jti}") == 1
+# Global instance
+protector = ReplayProtector()

@@ -1,0 +1,12 @@
+{
+  "bankA": {
+    "loan_limit": 1000000,
+    "max_risk": "medium",
+    "txn_daily_cap": 5000000
+  },
+  "bankB": {
+    "loan_limit": 500000,
+    "max_risk": "low",
+    "txn_daily_cap": 2000000
+  }
+}

@@ -1,1 +1,29 @@
+# Secrets
+.env
+api_keys.json
+
+# Logs & Dumps
+*.log
+logs/
+dump.rdb
+audit_chain.json  # If you want to exclude full chain locally
+
+# Python
 __pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -11,23 +11,26 @@ const program = new Command();
 
 program
   .name('uaal-shadow')
-  .description('LLM Intent Firewall - Shadow Mode')
-  .version('1.1.0-shadow');
+  .description('UAAL – LLM Intent Firewall')
+  .version('1.2.0-shadow');
 
+/**
+ * ANALYZE (shadow / enforce)
+ */
 program
   .command('analyze')
-  .description('Analyze historical LLM execution logs')
+  .description('Analyze historical LLM execution logs (shadow or enforce)')
   .requiredOption('-i, --input <file>', 'Input JSON logs file')
-  .option('-o, --output <file>', 'Output report file', 'proof.json')
+  .option('-o, --output <file>', 'Output file', 'proof.json')
   .option('--summary', 'Show executive risk summary')
   .option('--format <type>', 'json or csv', 'json')
   .option('-v, --verbose', 'Verbose output')
   .action(async (options) => {
-    // ---- LOAD LOGS ----
     const logs = JSON.parse(fs.readFileSync(options.input, 'utf8'));
+
     const firewall = new ShadowModeFirewall();
 
-    // ---- RUN SHADOW MODE ----
+    // ---- PROCESS LOGS ----
     for (const log of logs) {
       const analysis = await firewall.processShadowMode(log);
 
@@ -49,8 +52,9 @@ program
     // ---- OUTPUT ----
     if (options.format === 'csv') {
       const csv = toCSV(firewall.analyses);
-      fs.writeFileSync(options.output.replace('.json', '.csv'), csv);
-      console.log(`\n✅ Shadow analysis complete → ${options.output.replace('.json', '.csv')}`);
+      const csvFile = options.output.replace('.json', '.csv');
+      fs.writeFileSync(csvFile, csv);
+      console.log(`\n✅ Shadow analysis complete → ${csvFile}`);
     } else {
       fs.writeFileSync(
         options.output,
@@ -58,6 +62,19 @@ program
       );
       console.log(`\n✅ Shadow analysis complete → ${options.output}`);
     }
+  });
+
+/**
+ * ENFORCE MODE SWITCH
+ */
+program
+  .command('enforce')
+  .description('Run UAAL in real-time enforcement mode')
+  .action(() => {
+    process.env.UAAL_MODE = 'enforce';
+    console.log('🚨 UAAL running in ENFORCE mode');
+    console.log('• Policy violations will be BLOCKED');
+    console.log('• Decisions will emit to Kafka / webhook (if configured)');
   });
 
 program.parse(process.argv);

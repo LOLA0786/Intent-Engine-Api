@@ -1,0 +1,16 @@
+{
+  "shadowModeFindings": {
+    "periodDays": 30,
+    "totalActionsAnalyzed": 3,
+    "highRiskIntentDriftDetected": 1,
+    "wouldHaveBeenUnauthorized": 2,
+    "largestDrift": {
+      "field": "amount",
+      "deltaPercent": 900,
+      "coreValue": 250000,
+      "payloadValue": 2500000
+    },
+    "avgDetectionTimeMs": 0,
+    "falsePositives": 0
+  }
+}

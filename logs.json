@@ -1,0 +1,35 @@
+[
+  {
+    "timestamp": "2025-01-15T10:23:11Z",
+    "prompt": "Approve a $250k business loan for Acme Corp",
+    "toolCall": "approve_loan",
+    "params": {
+      "amount": 2500000,
+      "borrower": "acme corp",
+      "term": 60
+    },
+    "executed": true
+  },
+  {
+    "timestamp": "2025-01-15T11:04:33Z",
+    "prompt": "Transfer $50k to vendor account",
+    "toolCall": "transfer_funds",
+    "params": {
+      "amount": 50000,
+      "recipient": "vendor_xyz",
+      "memo": "Q1 payment"
+    },
+    "executed": true
+  },
+  {
+    "timestamp": "2025-01-15T14:22:09Z",
+    "prompt": "Approve $800k commercial loan",
+    "toolCall": "approve_loan",
+    "params": {
+      "amount": 800000,
+      "borrower": "bigcorp inc",
+      "term": 120
+    },
+    "executed": true
+  }
+]

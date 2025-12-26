@@ -1,4 +1,0 @@
-timestamp,action,core_amount,payload_amount,delta_percent,risk_level,policy_decision,policy_version,core_intent_hash,payload_hash
-2025-01-15T10:23:11Z,approve_loan,250000,2500000,900,CRITICAL,DENY,3.2.3,c3e146ec6ef3aa4a,798160a7b6c9f595
-2025-01-15T11:04:33Z,transfer_funds,50000,50000,,LOW,ALLOW,pass,d054d02544f9a9cf,46c03458a2db66bd
-2025-01-15T14:22:09Z,approve_loan,800000,800000,,LOW,DENY,3.2.3,55c017a2025f6bc9,b50a09dc7b953ed9

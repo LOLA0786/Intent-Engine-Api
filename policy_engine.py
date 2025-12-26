@@ -1,75 +1,105 @@
-import json
-import os
-from typing import Dict, Any
-from datetime import datetime
-import hashlib
-import random  # For synthetic variance
-from ml_risk_model import infer_risk  # New ML integration
+import random
 
-# Load policies from env or file (versioned)
-_POLICY_FILE = os.getenv("POLICY_FILE", "policies_v2.json")
-with open(_POLICY_FILE, 'r') as f:
-    POLICIES = json.load(f)
+def generate_synthetic_data(n=10, spike_prob=0.2):
+    synthetics = []
 
-def authorize_intent(intent: Dict[str, Any], tenant_policies: Dict[str, Any] = None):
-    tenant = intent.get("tenant_id", "default")
-    pol = tenant_policies or POLICIES.get(tenant, {})
-    
-    action = intent["action"]
-    entity = intent["entity"]
-    
-    # Infer risk if not provided (ML magic)
-    risk = entity.get("risk", infer_risk(entity))
-    entity["risk"] = risk  # Cache for logs
-    
-    # Fintech-specific rules (ML-enhanced)
-    if action == "approve_loan":
-        amount = entity.get("amount", 0)
-        limit = pol.get("loan_limit", 1000000)
-        max_risk = pol.get("max_risk", "medium")
-        if amount > limit or risk > max_risk:
-            return {"decision": "DENY", "reason": f"Exceeds {limit} or inferred risk {risk} > {max_risk}", "score": 0.10}
-        return {"decision": "ALLOW", "reason": "Compliant", "score": 0.95}
-    elif action == "process_txn":
-        amount = entity.get("amount", 0)
-        daily_cap = pol.get("txn_daily_cap", 5000000)
-        if amount > daily_cap or risk == "high":
-            return {"decision": "DENY", "reason": f"Exceeds {daily_cap} or high inferred risk", "score": 0.30}
-        return {"decision": "ALLOW", "reason": "Txn processed", "score": 0.85}
-    elif action == "flag_fraud":
-        if risk == "low":
-            return {"decision": "ALLOW", "reason": "No fraud flags", "score": 0.98}
-        return {"decision": "DENY", "reason": f"Fraud flagged due to inferred {risk} risk", "score": 0.20}
-    
-    # Default deny
-    return {"decision": "DENY", "reason": "Unknown action", "score": 0.00}
+    for i in range(n):
+        # base signals
+        amount = random.choice([50_000, 100_000, 150_000, 250_000, 500_000])
+        velocity = round(i / max(n - 1, 1), 2)
+        history_score = round(1 - velocity, 2)
 
-def generate_synthetic_data(num: int, tenant: str = "bankA") -> list[Dict]:
-    actions = ["approve_loan", "process_txn", "flag_fraud"]
-    data = []
-    for i in range(num):
-        base_amount = 50000 + (i * 50000)
-        # Add variance: 20% chance of high-risk spike
-        if random.random() < 0.2:
-            velocity = random.uniform(0.7, 1.0)  # Suspicious speed
-            history = random.uniform(0.0, 0.3)   # Bad history
-            amount = base_amount * 1.5  # Inflate amount
-        else:
-            velocity = (i / num)
-            history = 1 - (i / num)
-            amount = base_amount
-        
-        data.append({
-            "action": actions[i % len(actions)],
-            "entity": {"amount": amount, "velocity": velocity, "history_score": history},
-            "tenant_id": tenant
+        # 🔥 inject suspicious spikes
+        if random.random() < spike_prob:
+            velocity = round(random.uniform(0.8, 1.0), 2)
+            history_score = round(random.uniform(0.0, 0.3), 2)
+            amount = random.choice([750_000, 1_200_000])
+
+        synthetics.append({
+            "action": random.choice(["approve_loan", "process_txn", "flag_fraud"]),
+            "entity": {
+                "amount": amount,
+                "velocity": velocity,
+                "history_score": history_score
+            },
+            "tenant_id": "bankA"
         })
-    return data
 
-def simulate_attack(scenario: str):
-    if scenario == "replay":
-        return {"vulnerability": "Replay blocked", "status": "secure"}
-    return {"status": "Attack simulated - fail-closed"}
+    return synthetics
 
-def get_metrics():
-    return {"decisions": {"ALLOW": 70, "DENY": 30}, "avg_score": 0.78, "ml_infers": True}
+
+def infer_risk(entity):
+    if entity["velocity"] > 0.75 or entity["history_score"] < 0.3:
+        return "high"
+    if entity["velocity"] > 0.4:
+        return "medium"
+    return "low"
+
+
+def authorize_intent(intent):
+    risk = infer_risk(intent["entity"])
+    amt = intent["entity"]["amount"]
+    action = intent["action"]
+
+    if risk == "high":
+        return {"decision": "DENY", "reason": "High inferred risk"}
+
+    if action == "approve_loan" and amt > 500_000:
+        return {"decision": "DENY", "reason": "Amount exceeds limit"}
+
+    if action not in {"approve_loan", "process_txn", "flag_fraud"}:
+        return {"decision": "DENY", "reason": "Unknown action"}
+
+    return {"decision": "ALLOW", "reason": "Compliant"}
+from collections import deque
+import statistics
+
+WINDOW = 20
+velocity_window = deque(maxlen=WINDOW)
+amount_window = deque(maxlen=WINDOW)
+
+def detect_anomaly(entity):
+    velocity = entity["velocity"]
+    amount = entity["amount"]
+
+    velocity_window.append(velocity)
+    amount_window.append(amount)
+
+    if len(velocity_window) < 5:
+        return False, None
+
+    v_mean = statistics.mean(velocity_window)
+    v_std = statistics.stdev(velocity_window) or 0.01
+
+    a_mean = statistics.mean(amount_window)
+    a_std = statistics.stdev(amount_window) or 1
+
+    v_z = abs((velocity - v_mean) / v_std)
+    a_z = abs((amount - a_mean) / a_std)
+
+    if v_z > 3 or a_z > 3:
+        return True, f"ANOMALY_SPIKE (v_z={v_z:.2f}, a_z={a_z:.2f})"
+
+    return False, None
+
+def authorize_intent(intent):
+    entity = intent["entity"]
+    action = intent["action"]
+
+    is_anom, reason = detect_anomaly(entity)
+    if is_anom:
+        return {"decision": "DENY", "reason": reason}
+
+    risk = infer_risk(entity)
+    amt = entity["amount"]
+
+    if risk == "high":
+        return {"decision": "DENY", "reason": "High inferred risk"}
+
+    if action == "approve_loan" and amt > 500_000:
+        return {"decision": "DENY", "reason": "Amount exceeds limit"}
+
+    if action not in {"approve_loan", "process_txn", "flag_fraud"}:
+        return {"decision": "DENY", "reason": "Unknown action"}
+
+    return {"decision": "ALLOW", "reason": "Compliant"}

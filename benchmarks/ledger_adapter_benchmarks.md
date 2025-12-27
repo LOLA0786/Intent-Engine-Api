@@ -79,3 +79,141 @@ For reproducible local tests:
 - Fabric / Besu: Hyperledger Caliper
 - Cosmos: gaiad stress / tx flooding
 - WORM: local REPL tests (see `tests/test_worm.py`)
+
+---
+
+## Solana Performance Notes (Public High-Throughput Chain)
+
+Solana represents a **distinct performance class** compared to EVM, Fabric, and Cosmos:
+single global state, leader-based execution (PoH + Tower BFT), and extreme parallelism.
+
+### Observed Performance (2024–2025)
+
+| Metric | Solana |
+|------|--------|
+| Sustained TPS (realistic) | 2,000–5,000 |
+| Burst TPS (theoretical) | 50k–65k+ |
+| Avg Write Latency | 400–800 ms |
+| Finality | ~400 ms |
+| Read Latency | <10 ms |
+| Failure Mode | Leader stalls / state contention |
+
+Sources: Solana Labs reports, Firedancer benchmarks, Jump Crypto analyses, post-2024 mainnet incident reviews.
+
+---
+
+### Engineering Interpretation
+
+- **Strength:** Extremely high throughput for append-style workloads.
+- **Weakness:** Global state contention; outages under pathological load.
+- **Audit Suitability:** Good for *public anchoring* of hashes, not as a primary audit store.
+- **Reliability Tradeoff:** Faster than Ethereum L1, less predictable than Cosmos/Fabric under stress.
+
+---
+
+### Comparison vs Ethereum & Cosmos
+
+- **Solana vs Ethereum L1**
+  - Solana: 5–10× throughput, lower latency
+  - Ethereum: stronger decentralization, higher latency variance
+- **Solana vs Ethereum L2**
+  - Comparable throughput
+  - L2s win on reliability + tooling
+- **Solana vs Cosmos**
+  - Solana: higher raw TPS
+  - Cosmos: better fault isolation via app-chains
+
+---
+
+### Recommended Usage in Intent Engine
+
+- ❌ Not recommended for internal shadow-mode auditing
+- ⚠️ Not suitable for regulator-grade evidence alone
+- ✅ Suitable for:
+  - Public hash anchoring
+  - Viral / DeFi-facing proofs
+  - Periodic anchoring of WORM / QLDB digests
+
+**Pattern:**  
+WORM / QLDB (primary evidence) → batched hash → Solana tx (public timestamp)
+
+---
+
+### Risk Notes
+
+- Mainnet outages still occur (reduced but non-zero).
+- Performance claims assume no global state hot-spotting.
+- Firedancer client may materially change this profile post-2025.
+
+
+---
+
+## Ethereum L2 Performance Notes (Rollup-Based Scaling)
+
+Ethereum Layer 2s (Optimistic and ZK rollups) represent the **most production-stable public scaling path**
+for audit anchoring workloads. They inherit Ethereum’s security while avoiding L1 mempool contention.
+
+Benchmarks below reflect **2024–2025 production measurements** from Arbitrum, Optimism, Base,
+and zkSync Era under audit-like workloads (append hash + query by tx_hash).
+
+### Observed Performance (Production L2s)
+
+| L2 | Sustained TPS | Avg Write Latency | Finality (Economic) | Notes |
+|---|---|---|---|---|
+| Arbitrum One | 2k–4k | 200–400 ms | ~7 min (L1 settle) | Most mature; strong tooling |
+| Optimism | 1k–2k | 300–500 ms | ~7 min | Stable, conservative upgrades |
+| Base | 2k–3k | 200–400 ms | ~7 min | Coinbase infra; fast reads |
+| zkSync Era | 2k–5k | 300–600 ms | ~10–20 min | ZK proofs; higher variance |
+
+Sources: L2beat analytics, OP Stack reports, Arbitrum Nitro benchmarks, zkSync technical blog, 2024–2025 postmortems.
+
+---
+
+### Engineering Interpretation
+
+- **Strength:** High throughput + predictable latency under load.
+- **Security Model:** Inherits Ethereum L1 security (fraud proofs / validity proofs).
+- **Cost Profile:** Orders of magnitude cheaper than L1.
+- **Reliability:** Significantly more stable than Ethereum mainnet during spikes.
+
+---
+
+### Comparison vs Other Ledgers
+
+- **vs Ethereum L1**
+  - L2s avoid mempool wars and latency explosions.
+  - L1 remains too volatile for frequent audit writes.
+- **vs Solana**
+  - Solana offers higher raw TPS.
+  - L2s win on reliability, uptime, and enterprise trust.
+- **vs Cosmos**
+  - Cosmos better for sovereign app-chains.
+  - L2s better for public, shared trust anchoring.
+
+---
+
+### Recommended Usage in Intent Engine
+
+- ✅ Public-facing audit proofs
+- ✅ DeFi / ecosystem-integrated agents
+- ✅ Batched anchoring of internal evidence
+
+**Preferred Pattern:**  
+WORM / QLDB / Fabric → batch hash (N=100–1000) → Ethereum L2 tx → Ethereum L1 settlement
+
+This preserves:
+- low operational latency
+- public verifiability
+- cost control
+- regulatory defensibility
+
+---
+
+### Risk Notes
+
+- Finality is delayed until L1 settlement (minutes, not seconds).
+- Sequencer centralization still exists (mitigated via decentralization roadmaps).
+- ZK rollups trade latency predictability for cryptographic finality.
+
+For audit evidence, **economic finality is sufficient**; cryptographic finality is optional.
+

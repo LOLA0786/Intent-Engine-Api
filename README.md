@@ -1,7 +1,6 @@
 # Intent-Aware Authorization Platform
 ### The Deterministic Compliance & Control Plane for Autonomous AI Systems
 
-## TL;DR
 Modern AI systems can *decide* — but they cannot be allowed to *act freely* in regulated environments.
 
 This platform enforces **intent-aware authorization**:
@@ -92,6 +91,19 @@ Policy Firewall (deterministic, invariant)
 ALLOW / BLOCK / ESCALATE
             ↓
 Evidence + Audit Log (tamper-evident)
+
+
+ [AI Agent] --> Unstructured Intent --> [Intent Engine API                                      |
+                                      v
+[Normalization] --> [Policy Engine] --> [Evaluation]
+                                      |
+                                      v
+[Capability Grant] <-- [Enforce/Block] <-- [Evidence Hash]
+                                      |
+                                      v
+[Execution (if allowed)] --> [Ledger (Fabric/Redis)] --> [Audit Log]
+
+
 
 1. Intent Normalization (Non-Authoritative)
 

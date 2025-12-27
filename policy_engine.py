@@ -34,3 +34,12 @@ class PolicyEngine:
         }
 
 policy_engine = PolicyEngine()
+
+# --- APPROVAL BINDING ENFORCEMENT ---
+from approval_binding import assert_approval_binding
+# ----------------------------------
+
+# --- SIGNAL SIGNATURE VERIFICATION ---
+from signal_crypto import verify_signal
+from signal_schema import canonical_signal_payload
+# ------------------------------------

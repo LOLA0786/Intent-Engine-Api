@@ -1,59 +1,64 @@
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from policy_registry import get_active_policy
-from policy_engine import authorize
-from jwt_capability import issue_jwt_cap, verify_jwt_cap
-from audit_log import write_audit
-import uuid
+from typing import List, Optional
 
-app = FastAPI()
+from approval_store import (
+    issue_approval,
+    validate_and_collect_approvals,
+    consume_approvals,
+)
 
-class AuthRequest(BaseModel):
+app = FastAPI(title="UAAL Intent Control Plane")
+
+DUAL_AUTH_THRESHOLD = 250_000
+
+
+class Intent(BaseModel):
     action: str
-    principal: dict
-    context: dict
+    amount: int
+    currency: str
+    recipient: str
 
-@app.post("/authorize")
-def authorize_action(req: AuthRequest):
-    version, policy = get_active_policy()
-    allowed, reason = authorize(
-        req.action, req.principal, req.context, policy
+
+class Actor(BaseModel):
+    id: str
+    type: str
+
+
+class ApproveIntentRequest(BaseModel):
+    approver: str
+    scope: Intent
+    valid_for_seconds: int
+
+
+class AuthorizeIntentRequest(BaseModel):
+    intent: Intent
+    actor: Actor
+    approval_ids: Optional[List[str]] = []
+
+
+@app.post("/approve-intent")
+def approve_intent(req: ApproveIntentRequest):
+    approval_id = issue_approval(
+        approver=req.approver,
+        scope=req.scope.dict(),
+        valid_for_seconds=req.valid_for_seconds,
     )
+    return {"approval_id": approval_id, "status": "ACTIVE"}
 
-    decision_id = str(uuid.uuid4())
-    write_audit(decision_id, "AUTHORIZE", req.dict(), allowed, reason)
 
-    if not allowed:
-        raise HTTPException(403, reason)
+@app.post("/authorize-intent")
+def authorize_intent(req: AuthorizeIntentRequest):
+    intent = req.intent.dict()
 
-    token = issue_jwt_cap(decision_id, req.action, req.principal["id"])
-    return {
-        "decision": "ALLOW",
-        "decision_id": decision_id,
-        "policy_version": version,
-        "capability_token": token
-    }
+    if intent["amount"] > DUAL_AUTH_THRESHOLD:
+        if not validate_and_collect_approvals(req.approval_ids, intent):
+            return {
+                "allowed": False,
+                "reason": "Dual approval required",
+                "execution": "NOT_PERFORMED",
+            }
 
-@app.post("/execute/{action}")
-def execute_action(
-    action: str,
-    x_capability_token: str = Header(...),
-    x_principal_id: str = Header(...)
-):
-    try:
-        payload = verify_jwt_cap(
-            x_capability_token, action, x_principal_id
-        )
-    except Exception as e:
-        write_audit("unknown", "EXECUTE", {}, False, str(e))
-        raise HTTPException(403, str(e))
+        consume_approvals(req.approval_ids)
 
-    write_audit(
-        payload["decision_id"],
-        "EXECUTE",
-        payload,
-        True,
-        "Executed"
-    )
-
-    return {"status": "EXECUTED", "action": action}
+    return {"allowed": True, "execution": "PERFORMED"}

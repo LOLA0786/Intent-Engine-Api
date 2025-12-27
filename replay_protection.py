@@ -1,36 +1,42 @@
-import redis
-import hashlib
-import os
-from datetime import datetime
-from typing import Optional
+"""
+Replay protection primitives.
+Fail-closed by default.
+"""
 
-class ReplayProtector:
+import time
+
+# Simple in-memory blacklist for local / pilot
+_BLACKLIST = set()
+_REPLAY_LOG = []
+
+def record_replay_attempt(nonce: str, actor_id: str = None):
+    """
+    Record a replay attempt for audit / alerting.
+    """
+    _REPLAY_LOG.append({
+        "nonce": nonce,
+        "actor_id": actor_id,
+        "timestamp": time.time()
+    })
+    _BLACKLIST.add(nonce)
+
+def is_blacklisted(nonce: str) -> bool:
+    """
+    Check if nonce has already been used.
+    """
+    return nonce in _BLACKLIST
+
+
+class ReplayProtection:
+    """
+    One-time nonce checker.
+    """
     def __init__(self):
-        self.redis_client = redis.Redis.from_url(
-            os.getenv("REDIS_URL", "redis://localhost:6379"),
-            password=os.getenv("REDIS_PASSWORD"),
-            decode_responses=True,
-            socket_connect_timeout=2,
-            retry_on_timeout=True
-        )
-        self.ttl = 1800  # 30 min
+        self._seen = set()
 
-    def generate_nonce(self, user_id: str, tenant_id: str, timestamp: str) -> str:
-        """Generate unique nonce."""
-        payload = f"{timestamp}{user_id}{tenant_id}"
-        return hashlib.sha256(payload.encode()).hexdigest()[:32]
-
-    async def check_and_cache_nonce(self, nonce: str, user_id: str, tenant_id: str) -> bool:
-        """Check if nonce used; cache if new. Returns True if fresh."""
-        key = f"nonce:{tenant_id}:{user_id}:{nonce}"
-        try:
-            if self.redis_client.exists(key):
-                return False  # Replay
-            self.redis_client.setex(key, self.ttl, "used")
-            return True
-        except Exception:
-            # Fail-closed: Assume replay on error
+    def check(self, nonce: str) -> bool:
+        if nonce in self._seen or is_blacklisted(nonce):
+            record_replay_attempt(nonce)
             return False
-
-# Global instance
-protector = ReplayProtector()
+        self._seen.add(nonce)
+        return True

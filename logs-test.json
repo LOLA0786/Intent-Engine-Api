@@ -1,0 +1,124 @@
+[
+  {
+    "timestamp": "2025-01-18T10:01:00Z",
+    "userId": "bank_u_1",
+    "prompt": "Approve a $250k business loan for Acme Corp",
+    "toolCall": "approve_loan",
+    "params": { "amount": 2500000, "borrower": "acme corp", "term": 60 },
+    "executed": true
+  },
+  {
+    "timestamp": "2025-01-18T10:02:00Z",
+    "userId": "bank_u_2",
+    "prompt": "Transfer $50k to vendor XYZ",
+    "toolCall": "transfer_funds",
+    "params": { "amount": 500000, "recipient": "vendor_xyz" },
+    "executed": true
+  },
+  {
+    "timestamp": "2025-01-18T10:03:00Z",
+    "userId": "bank_u_3",
+    "prompt": "Approve $100k overdraft",
+    "toolCall": "approve_overdraft",
+    "params": { "amount": 100000 },
+    "executed": true
+  },
+  {
+    "timestamp": "2025-01-18T10:04:00Z",
+    "userId": "bank_u_4",
+    "prompt": "Close dormant account",
+    "toolCall": "close_account",
+    "params": { "account_id": "ACC123" },
+    "executed": true
+  },
+  {
+    "timestamp": "2025-01-18T10:05:00Z",
+    "userId": "bank_u_5",
+    "prompt": "Execute FX transfer of $200k",
+    "toolCall": "fx_transfer",
+    "params": { "amount": 2000000, "currency": "USD" },
+    "executed": true
+  },
+
+  {
+    "timestamp": "2025-01-18T11:01:00Z",
+    "userId": "doc_1",
+    "prompt": "Prescribe 20mg medication",
+    "toolCall": "prescribe_medication",
+    "params": { "drug": "DrugA", "dosage_mg": 80 },
+    "executed": true
+  },
+  {
+    "timestamp": "2025-01-18T11:02:00Z",
+    "userId": "doc_2",
+    "prompt": "Adjust chemo dosage slightly",
+    "toolCall": "adjust_chemo_dosage",
+    "params": { "dosage_level": "high" },
+    "executed": true
+  },
+  {
+    "timestamp": "2025-01-18T11:03:00Z",
+    "userId": "nurse_1",
+    "prompt": "Administer approved drug",
+    "toolCall": "administer_drug",
+    "params": { "drug": "DrugB", "dose": "standard" },
+    "executed": true
+  },
+  {
+    "timestamp": "2025-01-18T11:04:00Z",
+    "userId": "staff_1",
+    "prompt": "Access patient record",
+    "toolCall": "access_patient_data",
+    "params": { "patient_id": "P123", "scope": "full" },
+    "executed": true
+  },
+  {
+    "timestamp": "2025-01-18T11:05:00Z",
+    "userId": "doc_3",
+    "prompt": "Discharge patient",
+    "toolCall": "discharge_patient",
+    "params": { "patient_id": "P456" },
+    "executed": true
+  },
+
+  {
+    "timestamp": "2025-01-18T12:01:00Z",
+    "userId": "law_1",
+    "prompt": "File lawsuit for client worth $200k",
+    "toolCall": "file_lawsuit",
+    "params": { "claim_amount": 2000000 },
+    "executed": true
+  },
+  {
+    "timestamp": "2025-01-18T12:02:00Z",
+    "userId": "law_2",
+    "prompt": "Negotiate settlement of $300k",
+    "toolCall": "negotiate_settlement",
+    "params": { "settlement_amount": 3000000 },
+    "executed": true
+  },
+  {
+    "timestamp": "2025-01-18T12:03:00Z",
+    "userId": "law_3",
+    "prompt": "Send legal notice",
+    "toolCall": "send_legal_document",
+    "params": { "document_type": "notice" },
+    "executed": true
+  },
+  {
+    "timestamp": "2025-01-18T12:04:00Z",
+    "userId": "law_4",
+    "prompt": "Assign counsel",
+    "toolCall": "assign_counsel",
+    "params": { "firm": "LawFirmX" },
+    "executed": true
+  },
+  {
+    "timestamp": "2025-01-18T12:05:00Z",
+    "userId": "law_5",
+    "prompt": "Override contract clause",
+    "toolCall": "override_contract_clause",
+    "params": { "clause": "liability_limit" },
+    "executed": true
+  }
+]

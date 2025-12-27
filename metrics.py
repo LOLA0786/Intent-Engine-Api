@@ -24,3 +24,19 @@ def summarize(path="logs/routing.log"):
         "avg_latency_ms": latency / total if total else 0,
         "failure_rate": failures / total if total else 0
     }
+
+# --------------------------------------------------
+# Public adapter for audit / kill-tests
+# --------------------------------------------------
+def calculate_exposure(rows):
+    """
+    Calculate total exposure from audit decisions.
+    Expects rows with: amount, risk_score.
+    """
+    total = 0.0
+    for r in rows:
+        try:
+            total += float(r.get("amount", 0)) * float(r.get("risk_score", 0))
+        except Exception:
+            continue
+    return total

@@ -1,10 +1,22 @@
+from signal_crypto import sign_signal, generate_keypair
+from signal_schema import canonical_signal_payload
 import asyncio
+from policy_signal_verifier import verify_policy_signals
 import time
+from policy_signal_verifier import verify_policy_signals
 import json
+from policy_signal_verifier import verify_policy_signals
 import hashlib
+from policy_signal_verifier import verify_policy_signals
 import uuid
+from policy_signal_verifier import verify_policy_signals
 from datetime import datetime
 
+GEO_PRIVATE_KEY, GEO_PUBLIC_KEY = generate_keypair()
+
+PROVIDER_PUBLIC_KEYS = {
+    "geo_service_v1": GEO_PUBLIC_KEY
+}
 # --------------------------------------------------
 # Utilities
 # --------------------------------------------------
@@ -92,12 +104,25 @@ async def evaluate_transaction():
     # ---- Confidence Calculation ----
     confidence = 70  # degraded mode (OFAC missing)
 
+    geo_signal = {
+        "signal": "GEO_SANCTIONS",
+        "value": True,
+        "detail": "Medium risk jurisdiction",
+        "provider": "geo_service_v1",
+    }
+
+    payload = canonical_signal_payload(geo_signal)
+    geo_signal["signature"] = sign_signal(GEO_PRIVATE_KEY, payload)
+
     policy = [
         ("OFAC_MATCH", "TIMEOUT", "API timeout at 85ms"),
         ("PEP_RISK", False, "Politically exposed person"),
-        ("GEO_SANCTIONS", True, "Medium risk jurisdiction")
+        geo_signal,
+        geo_signal,
     ]
 
+
+    verify_policy_signals(policy, PROVIDER_PUBLIC_KEYS)
     action = escalation_action(confidence)
 
     # ---- Evidence Hash Chaining ----
@@ -126,10 +151,6 @@ async def evaluate_transaction():
     print("\n=== FINAL BOSS DEMO: RISK-BASED AUTHORIZATION ===")
     print("\n--- DISTRIBUTED TRACE ID ---")
     print(trace_id)
-
-    print("\n--- POLICY DECISION ---")
-    for p in policy:
-        print(list(p))
 
     print("\n--- CONFIDENCE SCORE ---")
     print(f"{confidence}%")

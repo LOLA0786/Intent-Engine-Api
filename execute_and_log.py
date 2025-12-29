@@ -14,3 +14,7 @@ def execute_and_log(router_name, state, provider):
     })
 
     return outcome, reward
+
+# --- INTENT BINDING ENFORCEMENT ---
+from intent_binding import assert_intent_binding
+# ---------------------------------

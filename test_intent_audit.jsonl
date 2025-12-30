@@ -1,0 +1,4 @@
+{"event_type": "created", "intent_id": "user_alice_intent_1", "timestamp": "2025-12-10T07:10:22.683538", "metadata": {"strength": 0.3}}
+{"event_type": "strengthened", "intent_id": "user_alice_intent_1", "timestamp": "2025-12-15T07:10:22.683935", "metadata": {"strength": 0.6}}
+{"event_type": "strengthened", "intent_id": "user_alice_intent_1", "timestamp": "2025-12-22T07:10:22.683997", "metadata": {"strength": 0.85}}
+{"event_type": "completed", "intent_id": "user_alice_intent_1", "timestamp": "2025-12-30T07:10:22.684045", "metadata": {"final_strength": 0.9}}

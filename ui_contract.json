@@ -1,0 +1,22 @@
+{
+  "visible_to_user": [
+    "intent_strength",
+    "intent_category",
+    "intent_status",
+    "last_active"
+  ],
+  "never_visible": [
+    "risk_flags",
+    "policy_names",
+    "abuse_flags",
+    "raw_events",
+    "audit_logs"
+  ],
+  "rules": [
+    "Every visible card must map to one evaluated intent",
+    "UI must never infer intent state",
+    "UI must not display suppressed intents",
+    "UI must not explain policy logic",
+    "If shown, intent_strength must come from engine only"
+  ]
+}

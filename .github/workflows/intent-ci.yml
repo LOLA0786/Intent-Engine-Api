@@ -1,0 +1,4 @@
+
+      - name: Run evolution replay tests
+        run: |
+          python3 tests/test_evolution_invariants.py

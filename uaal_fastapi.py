@@ -1,64 +1,92 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Security
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
-from typing import List, Optional
+import os
 
-from approval_store import (
-    issue_approval,
-    validate_and_collect_approvals,
-    consume_approvals,
-)
+from policy_engine import authorize_intent
+from evidence import generate_evidence, verify_evidence
+from replay_protection import check_replay
 
-app = FastAPI(title="UAAL Intent Control Plane")
+app = FastAPI(title="Intent Engine API", version="1.0.0")
 
-DUAL_AUTH_THRESHOLD = 250_000
+# --- Auth ---
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
+def get_api_key(api_key: str = Security(api_key_header)):
+    if api_key != os.getenv("API_SECRET_KEY"):
+        raise HTTPException(status_code=403, detail="Invalid API Key")
+    return api_key
 
-class Intent(BaseModel):
-    action: str
-    amount: int
-    currency: str
-    recipient: str
+# --- Models ---
+class IntentRequest(BaseModel):
+    intent: dict
+    agent_id: str
+    nonce: str
 
+class VerifyRequest(BaseModel):
+    decision_id: str
+    evidence_hash: str
 
-class Actor(BaseModel):
-    id: str
-    type: str
-
-
-class ApproveIntentRequest(BaseModel):
-    approver: str
-    scope: Intent
-    valid_for_seconds: int
-
-
-class AuthorizeIntentRequest(BaseModel):
-    intent: Intent
-    actor: Actor
-    approval_ids: Optional[List[str]] = []
-
-
-@app.post("/approve-intent")
-def approve_intent(req: ApproveIntentRequest):
-    approval_id = issue_approval(
-        approver=req.approver,
-        scope=req.scope.dict(),
-        valid_for_seconds=req.valid_for_seconds,
-    )
-    return {"approval_id": approval_id, "status": "ACTIVE"}
-
-
+# --- Endpoints ---
 @app.post("/authorize-intent")
-def authorize_intent(req: AuthorizeIntentRequest):
-    intent = req.intent.dict()
-
-    if intent["amount"] > DUAL_AUTH_THRESHOLD:
-        if not validate_and_collect_approvals(req.approval_ids, intent):
-            return {
-                "allowed": False,
-                "reason": "Dual approval required",
-                "execution": "NOT_PERFORMED",
+async def authorize(request: IntentRequest, key: str = Depends(get_api_key)):
+    if not check_replay(request.nonce):
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "code": "REPLAY_DETECTED",
+                "reason": "Replay detected"
             }
+        )
 
-        consume_approvals(req.approval_ids)
+    try:
+        decision = authorize_intent(request.intent)
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "ENGINE_ERROR",
+                "reason": "Authorization engine failure"
+            }
+        )
 
-    return {"allowed": True, "execution": "PERFORMED"}
+    if not decision.get("allowed", False):
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "POLICY_DENY",
+                "reason": decision.get("reason", "Policy denied")
+            }
+        )
+
+    evidence = generate_evidence(request.intent, decision)
+
+    return {
+        "decision_id": evidence["decision_id"],
+        "decision": decision,
+        "evidence": {
+            "hash": evidence["hash"],
+            "algorithm": evidence["algorithm"]
+        }
+    }
+
+@app.post("/verify-evidence")
+async def verify(req: VerifyRequest, key: str = Depends(get_api_key)):
+    valid = verify_evidence(req.decision_id, req.evidence_hash)
+    if not valid:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "INVALID_EVIDENCE",
+                "reason": "Evidence hash does not match decision"
+            }
+        )
+
+    return {
+        "decision_id": req.decision_id,
+        "verified": True
+    }
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}

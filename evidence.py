@@ -1,54 +1,37 @@
-import json
 import hashlib
+import json
 import time
+import uuid
 
-def record_evidence(event):
-    payload = json.dumps(event, sort_keys=True)
-    digest = hashlib.sha256(payload.encode()).hexdigest()
+# TEMP in-memory store (OK for local + demos)
+_EVIDENCE_STORE = {}
 
-    record = {
-        "event": event,
-        "hash": digest,
-        "timestamp": time.time()
-    }
+def generate_evidence(intent: dict, decision: dict):
+    decision_id = f"dec_{uuid.uuid4().hex}"
+    timestamp = int(time.time())
 
-    with open("logs/evidence.log", "a") as f:
-        f.write(json.dumps(record) + "\n")
-
-    return digest
-
-# ==============================
-# CANONICAL EVIDENCE API (STABLE)
-# ==============================
-import hashlib
-import json
-from datetime import datetime
-
-def generate_evidence(intent: dict, decision: dict, policy_version: str) -> dict:
-    """
-    Stable, deterministic evidence generator.
-    This is the ONLY function APIs should import.
-    """
     payload = {
+        "decision_id": decision_id,
         "intent": intent,
         "decision": decision,
-        "policy_version": policy_version
+        "timestamp": timestamp,
     }
 
-    serialized = json.dumps(payload, sort_keys=True).encode()
-    evidence_hash = hashlib.sha256(serialized).hexdigest()
+    raw = json.dumps(payload, sort_keys=True).encode()
+    evidence_hash = hashlib.sha256(raw).hexdigest()
 
-    return {
-        "decision": decision.get("allowed"),
-        "reason": decision.get("reason"),
-        "policy_version": policy_version,
-        "evidence_hash": evidence_hash,
-        "timestamp": datetime.utcnow().isoformat()
+    record = {
+        "decision_id": decision_id,
+        "hash": evidence_hash,
+        "algorithm": "sha256",
+        "payload": payload,
     }
 
-# ==============================
-# EVIDENCE VERIFICATION
-# ==============================
-def verify_evidence(intent: dict, decision: dict, policy_version: str, evidence_hash: str) -> bool:
-    regenerated = generate_evidence(intent, decision, policy_version)
-    return regenerated["evidence_hash"] == evidence_hash
+    _EVIDENCE_STORE[decision_id] = record
+    return record
+
+def verify_evidence(decision_id: str, evidence_hash: str) -> bool:
+    record = _EVIDENCE_STORE.get(decision_id)
+    if not record:
+        return False
+    return record["hash"] == evidence_hash

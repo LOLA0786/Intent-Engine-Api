@@ -10,3 +10,7 @@ node_modules/
 .DS_Store
 __pycache__/
 *.pyc
+# Local scratch files
+fintech.json
+replay_medtech_decision.py
+test_intent_engine_local.py
